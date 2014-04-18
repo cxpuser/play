@@ -1,0 +1,41 @@
+apply plugin: 'grgit-release'
+
+import org.ajoberstar.grgit.*
+
+buildscript {
+  repositories { jcenter() }
+  dependencies { classpath 'org.ajoberstar:gradle-git:0.8.0'}
+}
+
+release {
+  grgit = Grgit.open(project.file('.'))
+  releaseTasks = ['build']
+  version {
+    //untaggedStages = ['alpha'] // default is ['dev']
+    //taggedStages = ['beta'] // default is ['milestone', 'rc']
+    useBuildMetadataForStage = { true } // default is { stage -> stage != 'final' }
+    createBuildMetadata = { new Date().format('yyyy.MM.dd.hh.mm.ss') } // default is { grgit.head().abbreviatedId }
+  }
+
+  generateTagMessage = { version -> // default is "Release of ${version}"
+    StringBuilder builder = new StringBuilder()
+    builder.append('Release of ')
+    builder.append(version)
+    builder.append('\n\n')
+    grgit.log {
+      range "v${version.nearest.normal.toString()}^{commit}", 'HEAD'
+    }.inject(builder) { bldr, commit ->
+      bldr.append('- ')
+      bldr.append(commit.shortMessage)
+      bldr.append('\n')
+    }
+    builder.toString()
+  }
+
+  task tagRelease << {
+    grgit.tag.add {
+      name = version
+      message = "Release of ${version}"
+    }
+  }
+}
