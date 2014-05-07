@@ -2,6 +2,7 @@ apply plugin: 'java'
 apply plugin: 'grgit-release'
 
 import org.ajoberstar.grgit.*
+//adding comment for hot-fix
 
 buildscript {
   repositories { jcenter() }
